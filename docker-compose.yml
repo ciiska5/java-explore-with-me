@@ -5,7 +5,6 @@ services:
     image: stats-service-image
     container_name: explore-with-me-stats
     depends_on:
-      - ewm-service
       - stats-db
     ports:
       - "9090:9090"
@@ -29,6 +28,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      - stats-server
       - ewm-db
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-db
