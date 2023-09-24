@@ -7,6 +7,7 @@ import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
 import ru.practicum.service.EndpointHitService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -20,7 +21,7 @@ public class EndpointHitController {
 
     //Сохранение информации о том, что на uri конкретного сервиса был отправлен запрос пользователем.
     @PostMapping("/hit")
-    public void saveHit(@RequestBody EndpointHitDto endpointHitDto) {
+    public void saveHit(@RequestBody @Valid EndpointHitDto endpointHitDto) {
         log.info("Сохранен hit для URI {}", endpointHitDto.getUri());
         ehs.saveHit(endpointHitDto);
     }
