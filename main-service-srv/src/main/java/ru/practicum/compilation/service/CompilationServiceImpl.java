@@ -64,7 +64,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto addNewCompilation(NewCompilationDto newCompilationDto) {
-        log.info("Добавление новой подборки" );
+        log.info("Добавление новой подборки");
         List<Event> events = new ArrayList<>();
 
         List<Long> eventIds = newCompilationDto.getEvents();

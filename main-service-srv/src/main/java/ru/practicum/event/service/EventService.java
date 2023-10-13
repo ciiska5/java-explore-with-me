@@ -42,7 +42,7 @@ public interface EventService {
     EventFullDto updateEventAndRequestStatusByAdmin(Long eventId, UpdateEventAdminRequest updateEventAdminRequest);
 
     //Получение событий с возможностью фильтрации
-    List<EventShortDto> getAllEventsForPublic (
+    List<EventShortDto> getAllEventsForPublic(
             PublicParameters publicParameters,
             Integer from,
             Integer size,

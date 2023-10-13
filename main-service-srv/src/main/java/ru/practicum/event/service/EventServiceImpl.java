@@ -317,7 +317,7 @@ public class EventServiceImpl implements EventService {
     //Получение событий с возможностью фильтрации
     @Override
     @Transactional(readOnly = true)
-    public List<EventShortDto> getAllEventsForPublic (PublicParameters publicParameters,
+    public List<EventShortDto> getAllEventsForPublic(PublicParameters publicParameters,
                                                       Integer from,
                                                       Integer size,
                                                       HttpServletRequest httpServletRequest) {
@@ -495,7 +495,7 @@ public class EventServiceImpl implements EventService {
         if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
             throw new EventDateException(
                     String.format("Заданы некорректные параметры сортировки по времени rangeStart = %s, rangeEnd = %s. " +
-                            "rangeStart должен быть раньше rangeEnd", rangeStart , rangeEnd));
+                            "rangeStart должен быть раньше rangeEnd", rangeStart, rangeEnd));
         }
     }
 

@@ -51,7 +51,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
     public UserDto addNewUser(NewUserRequest newUserRequest) {
         String email = newUserRequest.getEmail();
 
-        if(userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Пользователь с таким email уже зарегистрирован");
         }
 
