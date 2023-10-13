@@ -3,38 +3,66 @@ package ru.practicum.client;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.dto.EndpointHitDto;
+import ru.practicum.dto.ViewStats;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
-public class StatsClient extends BaseClient {
+public class StatsClient {
+    RestTemplate restTemplate;
+
     @Autowired
     public StatsClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
-        super(
+        this.restTemplate =
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
                         .requestFactory(HttpComponentsClientHttpRequestFactory::new)
-                        .build()
+                        .build();
+    }
+
+    public void saveHit(EndpointHitDto endpointHitDto) {
+        restTemplate.exchange(
+                "/hit", HttpMethod.POST, new HttpEntity<>(endpointHitDto,defaultHeaders()), Object.class
         );
     }
 
-    public ResponseEntity<Object> saveHit(EndpointHitDto endpointHitDto) {
-        return post("/hit", endpointHitDto);
-    }
+    public List<ViewStats> getViewStats(String start, String end, String[] uris, boolean unique) {
 
-    public ResponseEntity<Object> getStats(String start, String end, List<String> uris, Boolean unique) {
         Map<String, Object> parameters = Map.of(
                 "start", start,
                 "end", end,
-                "uris", uris,
+                "uris", String.join(",", uris),
                 "unique", unique
         );
-        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+
+        ViewStats[] viewStats = restTemplate.getForObject(
+                "/stats?start={start}&end={end}&uris={uris}&unique={unique}",
+                ViewStats[].class,
+                parameters
+        );
+
+        List<ViewStats> viewStatsList = new ArrayList<>();
+        if (viewStats != null) {
+            viewStatsList = Arrays.stream(viewStats).collect(Collectors.toList());
+        }
+
+        return viewStatsList;
+    }
+
+    private HttpHeaders defaultHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        return headers;
     }
 }
