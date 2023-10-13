@@ -1,13 +1,13 @@
-package ru.practicum.service;
+package ru.practicum.server.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
-import ru.practicum.mapper.EndpointHitMapper;
-import ru.practicum.model.EndpointHit;
-import ru.practicum.repository.EndpointHitRepository;
+import ru.practicum.server.mapper.EndpointHitMapper;
+import ru.practicum.server.model.EndpointHit;
+import ru.practicum.server.repository.EndpointHitRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

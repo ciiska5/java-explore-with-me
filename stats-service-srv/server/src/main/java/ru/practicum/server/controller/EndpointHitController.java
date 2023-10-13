@@ -1,11 +1,11 @@
-package ru.practicum.controller;
+package ru.practicum.server.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
-import ru.practicum.service.EndpointHitService;
+import ru.practicum.server.service.EndpointHitService;
 
 import javax.validation.Valid;
 import java.util.List;
