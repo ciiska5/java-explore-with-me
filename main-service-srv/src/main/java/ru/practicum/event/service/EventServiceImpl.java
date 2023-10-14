@@ -11,8 +11,8 @@ import ru.practicum.client.StatsClient;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
 import ru.practicum.event.dto.*;
-import ru.practicum.event.enums.states.ChangedEventState;
 import ru.practicum.event.enums.states.EventState;
+import ru.practicum.event.enums.states.StateAction;
 import ru.practicum.event.enums.status.RequestStatus;
 import ru.practicum.event.location.model.Location;
 import ru.practicum.event.location.repository.LocationRepository;
@@ -251,7 +251,6 @@ public class EventServiceImpl implements EventService {
                 .stream().map(EventState::valueOf).collect(Collectors.toList());
 
         PageRequest pageRequest = PageRequest.of(from / size, size);
-        System.out.println(pageRequest);
         List<Event> foundEvents = eventRepository.getEventsByAdmin(
                 adminParameters, rangeStart, rangeEnd, eventStateList, pageRequest
         );
@@ -288,14 +287,14 @@ public class EventServiceImpl implements EventService {
 
         String updatedRequestState = updateEventAdminRequest.getStateAction();
         if (updatedRequestState != null) {
-            if (updatedRequestState.equals(ChangedEventState.PUBLISH_EVENT.toString())) {
+            if (updatedRequestState.equals(StateAction.PUBLISH_EVENT.toString())) {
                 if (event.getState().equals(EventState.PUBLISHED)) {
                     throw new EventValidationException("Событие можно публиковать, только если оно в состоянии ожидания публикации");
                 }
                 event.setPublishedOn(LocalDateTime.now());
                 event.setState(EventState.PUBLISHED);
             }
-            if (updatedRequestState.equals(ChangedEventState.REJECT_EVENT.toString())) {
+            if (updatedRequestState.equals(StateAction.REJECT_EVENT.toString())) {
                 if (event.getState().equals(EventState.PUBLISHED)) {
                     throw new EventValidationException("Событие можно отклонить, только если оно еще не опубликовано");
                 }

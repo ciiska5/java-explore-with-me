@@ -7,5 +7,6 @@ package ru.practicum.event.enums.states;
 public enum EventState {
     PENDING,
     PUBLISHED,
-    CANCELED
+    CANCELED,
+    REJECTED
 }
