@@ -23,7 +23,6 @@ services:
 
   ewm-service:
     build: main-service-srv
-    image: main-service-image
     container_name: explore-with-me-main
     ports:
       - "8080:8080"
