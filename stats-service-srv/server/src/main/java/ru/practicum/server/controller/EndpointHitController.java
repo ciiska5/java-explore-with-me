@@ -2,6 +2,7 @@ package ru.practicum.server.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
@@ -21,6 +22,7 @@ public class EndpointHitController {
 
     //Сохранение информации о том, что на uri конкретного сервиса был отправлен запрос пользователем.
     @PostMapping("/hit")
+    @ResponseStatus(HttpStatus.CREATED)
     public void saveHit(@RequestBody @Valid EndpointHitDto endpointHitDto) {
         log.info("Сохранен hit для URI {}", endpointHitDto.getUri());
         ehs.saveHit(endpointHitDto);

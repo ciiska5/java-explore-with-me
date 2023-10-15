@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
+import ru.practicum.server.exception.HitDateException;
 import ru.practicum.server.mapper.EndpointHitMapper;
 import ru.practicum.server.model.EndpointHit;
 import ru.practicum.server.repository.EndpointHitRepository;
@@ -33,11 +34,22 @@ public class EndpointHitServiceImpl implements EndpointHitService {
         LocalDateTime startDate = LocalDateTime.parse(start, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         LocalDateTime endDate = LocalDateTime.parse(end, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
+        checkTimeParameters(startDate, endDate);
+
         return uris == null ?
                 (Boolean.TRUE.equals(unique) ? ehr.findUniqueIpAndNonUriViewStats(startDate, endDate)
                         : ehr.findNonUniqueIpAndNonUriViewStats(startDate, endDate))
                 :
                 (Boolean.TRUE.equals(unique) ? ehr.findUniqueIpAndUriContainingViewStats(startDate, endDate, uris)
                         : ehr.findNonUniqueIpAndContainingViewStats(startDate, endDate, uris));
+    }
+
+    //проверка на то, что дата начала раньше даты окончания
+    private void checkTimeParameters(LocalDateTime start, LocalDateTime end) {
+        if (start != null && end != null && end.isBefore(start)) {
+            throw new HitDateException(
+                    String.format("Заданы некорректные параметры по диапазону времени rangeStart = %s, rangeEnd = %s. " +
+                            "rangeStart должен быть раньше rangeEnd", start, end));
+        }
     }
 }
