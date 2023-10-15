@@ -247,6 +247,13 @@ public class EventServiceImpl implements EventService {
         LocalDateTime rangeEnd = stringToTime(adminParameters.getRangeEnd());
         checkTimeParameters(rangeStart, rangeEnd);
 
+        if (rangeStart == null) {
+            rangeStart = LocalDateTime.now();
+        }
+        if (rangeEnd == null) {
+            rangeEnd = LocalDateTime.now().plusYears(5000);
+        }
+
         List<EventState> eventStateList = adminParameters.getStates() == null ? null : adminParameters.getStates()
                 .stream().map(EventState::valueOf).collect(Collectors.toList());
 
