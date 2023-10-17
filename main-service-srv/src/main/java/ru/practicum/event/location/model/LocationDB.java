@@ -16,7 +16,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "locations")
-public class Location {
+public class LocationDB {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; //Идентификатор

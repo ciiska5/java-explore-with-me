@@ -21,9 +21,9 @@ public class NewCompilationDto {
     @NotNull
     @NotBlank
     @Size(min = 1, max = 50)
-    String title;//Заголовок подборки
+    private String title;//Заголовок подборки
 
-    Boolean pinned;//Закреплена ли подборка на главной странице сайта
+    private Boolean pinned;//Закреплена ли подборка на главной странице сайта
 
-    List<Long> events;//Список идентификаторов событий входящих в подборку
+    private List<Long> events;//Список идентификаторов событий входящих в подборку
 }

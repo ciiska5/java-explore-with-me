@@ -15,11 +15,11 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CompilationDto {
-    Long id;//Идентификатор
+    private Long id;//Идентификатор
 
-    String title;//Заголовок подборки
+    private String title;//Заголовок подборки
 
-    Boolean pinned;//Закреплена ли подборка на главной странице сайта
+    private Boolean pinned;//Закреплена ли подборка на главной странице сайта
 
-    List<EventShortDto> events;//Список событий входящих в подборку
+    private List<EventShortDto> events;//Список событий входящих в подборку
 }

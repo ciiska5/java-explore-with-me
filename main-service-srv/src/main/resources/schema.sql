@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS events (
     request_moderation  BOOLEAN NOT NULL,
     state               VARCHAR(256) NOT NULL,
     title               VARCHAR(150) NOT NULL,
-    views               BIGINT,
     category_id         BIGINT REFERENCES categories (id),
     initiator_id        BIGINT REFERENCES users (id) ON DELETE CASCADE,
     location_id         BIGINT REFERENCES locations (id),

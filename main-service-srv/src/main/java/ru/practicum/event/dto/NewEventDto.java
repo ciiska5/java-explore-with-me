@@ -3,7 +3,7 @@ package ru.practicum.event.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.event.location.model.Location;
+import ru.practicum.event.location.dto.Location;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;

@@ -46,9 +46,10 @@ public interface EventService {
             PublicParameters publicParameters,
             Integer from,
             Integer size,
-            HttpServletRequest httpServletRequest
+            String uri,
+            String remoteAddr
     );
 
     //Получение подробной информации об опубликованном событии по его идентификатору
-    EventFullDto getEventByIdForPublic(Long id, HttpServletRequest httpServletRequest);
+    EventFullDto getEventByIdForPublic(Long id, String uri, String remoteAddr);
 }

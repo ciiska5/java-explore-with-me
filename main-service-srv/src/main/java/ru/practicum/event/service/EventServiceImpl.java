@@ -14,7 +14,7 @@ import ru.practicum.event.dto.*;
 import ru.practicum.event.enums.states.EventState;
 import ru.practicum.event.enums.states.StateAction;
 import ru.practicum.event.enums.status.RequestStatus;
-import ru.practicum.event.location.model.Location;
+import ru.practicum.event.location.model.LocationDB;
 import ru.practicum.event.location.repository.LocationRepository;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
@@ -34,7 +34,6 @@ import ru.practicum.exception.RequestValidationException;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -42,6 +41,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ru.practicum.event.location.mapper.LocationMapper.toLocation;
 
 @Service
 @Slf4j
@@ -69,7 +70,7 @@ public class EventServiceImpl implements EventService {
         log.info("УСПЕШНО получены события, добавленные текущим пользователем с id = {}", userId);
         return eventRepository.findAllByInitiatorId(userId, pageRequest)
                 .stream()
-                .map(EventMapper::toEventShortDto)
+                .map(event -> EventMapper.toEventShortDto(event, getViewStats(event)))
                 .collect(Collectors.toList());
     }
 
@@ -84,10 +85,9 @@ public class EventServiceImpl implements EventService {
         User user = checkUserExistence(userId);
         Category category = checkCategoryExistence(newEventDto.getCategory());
 
-        Location location = locationRepository.save(newEventDto.getLocation());
-        newEventDto.setLocation(location);
+        LocationDB location = locationRepository.save(toLocation(newEventDto.getLocation()));
 
-        Event event = EventMapper.toEvent(newEventDto, user, category);
+        Event event = EventMapper.toEvent(newEventDto, user, category, location);
         Event savedEvent = eventRepository.save(event);
 
         Long views = 0L;
@@ -119,6 +119,11 @@ public class EventServiceImpl implements EventService {
         String eventDate = updateEventUserRequest.getEventDate();
         checkTwoHoursTimeRestriction(eventDate);
 
+        LocationDB updateLocation = null;
+        if (updateEventUserRequest.getLocation() != null) {
+            updateLocation = locationRepository.save(toLocation(updateEventUserRequest.getLocation()));
+        }
+
         if (event.getState() != EventState.PENDING && event.getState() != EventState.CANCELED) {
             throw new EventValidationException("Изменить можно только отмененные события или" +
                     " события в состоянии ожидания модерации");
@@ -137,7 +142,7 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        updateEventFieldsByUser(event, updateEventUserRequest);
+        updateEventFieldsByUser(event, updateEventUserRequest, updateLocation);
 
         Event updatedEvent = eventRepository.save(event);
         log.info("УСПЕШНО изменено событие c id = {}, добавленное текущим пользователем c id = {}", eventId, userId);
@@ -281,9 +286,9 @@ public class EventServiceImpl implements EventService {
             category = checkCategoryExistence(updateEventAdminRequest.getCategory());
         }
 
-        Location updateLocation = null;
+        LocationDB updateLocation = null;
         if (updateEventAdminRequest.getLocation() != null) {
-            updateLocation = locationRepository.save(updateEventAdminRequest.getLocation());
+            updateLocation = locationRepository.save(toLocation(updateEventAdminRequest.getLocation()));
         }
 
         if (!event.getState().equals(EventState.PENDING)) {
@@ -326,7 +331,8 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getAllEventsForPublic(PublicParameters publicParameters,
                                                       Integer from,
                                                       Integer size,
-                                                      HttpServletRequest httpServletRequest) {
+                                                      String uri,
+                                                      String remoteAddr) {
         log.info("Получение событий с параметрами {}", publicParameters);
 
         LocalDateTime rangeStart = stringToTime(publicParameters.getRangeStart());
@@ -354,21 +360,21 @@ public class EventServiceImpl implements EventService {
             List<Event> availableEventList = eventRepository.searchAvailableEventsByPublic(
                     publicParameters, rangeStart, rangeEnd, pageRequest
             );
-            saveHit(httpServletRequest);
+            saveHit(uri, remoteAddr);
 
             log.info("Получены события с параметрами {}, у которых не исчерпан лимит запросов на участие", publicParameters);
             return availableEventList.stream()
-                    .map(EventMapper::toEventShortDto)
+                    .map(event -> EventMapper.toEventShortDto(event, getViewStats(event)))
                     .collect(Collectors.toList());
         } else {
             List<Event> allPublishedEvents = eventRepository.getAllPublishedEvents(
                     publicParameters, rangeStart, rangeEnd, pageRequest
             );
-            saveHit(httpServletRequest);
+            saveHit(uri, remoteAddr);
 
             log.info("Получены все опубликованные события с параметрами {}", publicParameters);
             return allPublishedEvents.stream()
-                    .map(EventMapper::toEventShortDto)
+                    .map(event -> EventMapper.toEventShortDto(event, getViewStats(event)))
                     .collect(Collectors.toList());
         }
     }
@@ -376,7 +382,7 @@ public class EventServiceImpl implements EventService {
     //Получение подробной информации об опубликованном событии по его идентификатору
     @Override
     @Transactional(readOnly = true)
-    public EventFullDto getEventByIdForPublic(Long id, HttpServletRequest httpServletRequest) {
+    public EventFullDto getEventByIdForPublic(Long id, String uri, String remoteAddr) {
         log.info("Получение подробной информации об опубликованном событии с id = {}", id);
         Event event = checkEventExistence(id);
 
@@ -384,7 +390,7 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Событие должно быть опубликовано");
         }
 
-        saveHit(httpServletRequest);
+        saveHit(uri, remoteAddr);
         return EventMapper.toEventFullDto(event, getViewStats(event));
     }
 
@@ -436,7 +442,9 @@ public class EventServiceImpl implements EventService {
     }
 
     //обновление значения полей события
-    private void updateEventFieldsByUser(Event event, UpdateEventUserRequest updateEventUserRequest) {
+    private void updateEventFieldsByUser(Event event,
+                                         UpdateEventUserRequest updateEventUserRequest,
+                                         LocationDB location) {
 
         String annotation = updateEventUserRequest.getAnnotation();
         Long category = updateEventUserRequest.getCategory();
@@ -445,7 +453,6 @@ public class EventServiceImpl implements EventService {
         Boolean paid = updateEventUserRequest.getPaid();
         Long participantLimit = updateEventUserRequest.getParticipantLimit();
         String title = updateEventUserRequest.getTitle();
-        Location location = updateEventUserRequest.getLocation();
         Boolean requestModeration = updateEventUserRequest.getRequestModeration();
 
         if (annotation != null) {
@@ -508,9 +515,8 @@ public class EventServiceImpl implements EventService {
     //обновление значения полей события администратором
     private void updateEventFieldsByAdmin(Event event,
                                           UpdateEventAdminRequest updateEventAdminRequest,
-                                          Location location,
+                                          LocationDB location,
                                           Category category) {
-
         String annotation = updateEventAdminRequest.getAnnotation();
         String description = updateEventAdminRequest.getDescription();
         String eventDate = updateEventAdminRequest.getEventDate();
@@ -563,11 +569,11 @@ public class EventServiceImpl implements EventService {
     }
 
     //сохранить в сервисе статистики информации о том, что по этому эндпоинту был осуществлен и обработан запрос
-    private void saveHit(HttpServletRequest httpServletRequest) {
+    private void saveHit(String uri, String remoteAddr) {
         EndpointHitDto endpointHitDto = new EndpointHitDto();
         endpointHitDto.setApp("ewm-main-service");
-        endpointHitDto.setUri(httpServletRequest.getRequestURI());
-        endpointHitDto.setIp(httpServletRequest.getRemoteAddr());
+        endpointHitDto.setUri(uri);
+        endpointHitDto.setIp(remoteAddr);
         endpointHitDto.setTimestamp(timeToString(LocalDateTime.now()));
         statsClient.saveHit(endpointHitDto);
     }

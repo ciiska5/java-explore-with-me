@@ -3,7 +3,7 @@ package ru.practicum.event.model;
 import lombok.*;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.enums.states.EventState;
-import ru.practicum.event.location.model.Location;
+import ru.practicum.event.location.model.LocationDB;
 import ru.practicum.user.model.User;
 
 import javax.persistence.*;
@@ -59,9 +59,6 @@ public class Event {
     @Column(name = "title", nullable = false, length = 150)
     private String title;//Заголовок
 
-    @Column(nullable = false)
-    private Long views;//Количество просмотров события
-
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
@@ -72,5 +69,5 @@ public class Event {
 
     @OneToOne
     @JoinColumn(name = "location_id", nullable = false)
-    private Location location;
+    private LocationDB location;
 }

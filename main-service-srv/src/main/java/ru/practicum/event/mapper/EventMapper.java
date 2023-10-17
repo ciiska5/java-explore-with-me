@@ -5,6 +5,7 @@ import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.enums.states.EventState;
+import ru.practicum.event.location.model.LocationDB;
 import ru.practicum.event.model.Event;
 import ru.practicum.user.model.User;
 
@@ -14,6 +15,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 import static ru.practicum.category.mapper.CategoryMapper.toCategoryDto;
+import static ru.practicum.event.location.mapper.LocationMapper.toLocationDto;
 import static ru.practicum.user.mapper.UserMapper.toUserShortDto;
 
 public class EventMapper {
@@ -28,7 +30,7 @@ public class EventMapper {
         eventFullDto.setDescription(event.getDescription());
         eventFullDto.setEventDate(timeToString(event.getEventDate()));
         eventFullDto.setInitiator(toUserShortDto(event.getInitiator()));
-        eventFullDto.setLocation(event.getLocation());
+        eventFullDto.setLocation(toLocationDto(event.getLocation()));
         eventFullDto.setPaid(event.getPaid());
         eventFullDto.setParticipantLimit(event.getParticipantLimit());
         eventFullDto.setPublishedOn(timeToString(event.getPublishedOn()));
@@ -41,7 +43,7 @@ public class EventMapper {
         return eventFullDto;
     }
 
-    public static EventShortDto toEventShortDto(Event event) {
+    public static EventShortDto toEventShortDto(Event event, Long views) {
         EventShortDto eventShortDto = new EventShortDto();
 
         eventShortDto.setId(event.getId());
@@ -52,11 +54,12 @@ public class EventMapper {
         eventShortDto.setPaid(event.getPaid());
         eventShortDto.setTitle(event.getTitle());
         eventShortDto.setConfirmedRequests(event.getConfirmedRequests());
+        eventShortDto.setViews(views);
 
         return eventShortDto;
     }
 
-    public static Event toEvent(NewEventDto newEventDto, User user, Category category) {
+    public static Event toEvent(NewEventDto newEventDto, User user, Category category, LocationDB location) {
         boolean requestModeration = true;
         if (newEventDto.getRequestModeration() != null) {
             requestModeration = newEventDto.getRequestModeration();
@@ -80,7 +83,7 @@ public class EventMapper {
         event.setEventDate(stringToTime(newEventDto.getEventDate()));
         event.setPublishedOn(null);
         event.setCreatedOn(LocalDateTime.now());
-        event.setLocation(newEventDto.getLocation());
+        event.setLocation(location);
         event.setPaid(paid);
         event.setParticipantLimit(participantLimit);
         event.setRequestModeration(requestModeration);

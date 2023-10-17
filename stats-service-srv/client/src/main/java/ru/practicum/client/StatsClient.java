@@ -15,11 +15,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class StatsClient {
-    RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     @Autowired
     public StatsClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
@@ -53,7 +52,7 @@ public class StatsClient {
 
         List<ViewStats> viewStatsList = new ArrayList<>();
         if (viewStats != null) {
-            viewStatsList = Arrays.stream(viewStats).collect(Collectors.toList());
+            viewStatsList = Arrays.asList(viewStats);
         }
 
         return viewStatsList;

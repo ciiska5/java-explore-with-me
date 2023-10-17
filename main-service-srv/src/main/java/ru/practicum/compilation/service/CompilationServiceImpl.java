@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.StatsClient;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationRequest;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
+    private final StatsClient statsClient;
 
     //Получение подбророк событий
     @Override
@@ -35,9 +37,10 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Получены все подборки событий");
 
         if (pinned == null) {
+
             return compilationRepository.findAll(pageRequest)
                     .stream()
-                    .map(CompilationMapper::toCompilationDto)
+                    .map(compilation -> CompilationMapper.toCompilationDto(compilation, statsClient))
                     .collect(Collectors.toList());
         }
 
@@ -45,7 +48,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         return compilationsList
                 .stream()
-                .map(CompilationMapper::toCompilationDto)
+                .map(compilation -> CompilationMapper.toCompilationDto(compilation, statsClient))
                 .collect(Collectors.toList());
     }
 
@@ -57,7 +60,7 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation compilation = checkCompilationExistence(compId);
 
         log.info("Получена подборка событий с id = {}", compId);
-        return CompilationMapper.toCompilationDto(compilation);
+        return CompilationMapper.toCompilationDto(compilation, statsClient);
     }
 
     //Добавление новой подборки (подборка может не содержать событий)
@@ -76,7 +79,7 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation savedCompilation = compilationRepository.save(compilation);
 
         log.info("Подборка с id = {} добавлена.", savedCompilation.getId());
-        return CompilationMapper.toCompilationDto(savedCompilation);
+        return CompilationMapper.toCompilationDto(savedCompilation, statsClient);
     }
 
     //Удаление подборки
@@ -119,19 +122,12 @@ public class CompilationServiceImpl implements CompilationService {
         }
 
         log.info("Подборка событий с id = {} обновлена", compId);
-        return CompilationMapper.toCompilationDto(compilation);
+        return CompilationMapper.toCompilationDto(compilation, statsClient);
     }
 
     //проверка существования подборки событий
     private Compilation checkCompilationExistence(Long compId) {
         return compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Подборка событий с id = " + compId + " не найдена"));
-    }
-
-    //проверка существования события
-    private Event checkEventExistence(Event event) {
-        Long eventId = event.getId();
-        return eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с id = " + eventId + " не найдено"));
     }
 }

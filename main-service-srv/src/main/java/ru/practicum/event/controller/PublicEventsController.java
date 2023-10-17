@@ -34,17 +34,21 @@ public class PublicEventsController {
             @RequestParam(defaultValue = "10") Integer size,
             HttpServletRequest httpServletRequest) {
         //создаем одну сущность из параметров
+        String uri = httpServletRequest.getRequestURI();
+        String remoteAddr = httpServletRequest.getRemoteAddr();
         PublicParameters publicParameters = new PublicParameters(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort);
 
         return eventService.getAllEventsForPublic(
-                publicParameters, from, size, httpServletRequest
+                publicParameters, from, size, uri, remoteAddr
         );
     }
 
     //Получение подробной информации об опубликованном событии по его идентификатору
     @GetMapping("/{id}")
     public EventFullDto getEventByIdForPublic(@PathVariable Long id, HttpServletRequest httpServletRequest) {
-        return eventService.getEventByIdForPublic(id, httpServletRequest);
+        String uri = httpServletRequest.getRequestURI();
+        String remoteAddr = httpServletRequest.getRemoteAddr();
+        return eventService.getEventByIdForPublic(id, uri, remoteAddr);
     }
 }
