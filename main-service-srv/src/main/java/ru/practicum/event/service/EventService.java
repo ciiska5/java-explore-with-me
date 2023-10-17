@@ -7,7 +7,6 @@ import ru.practicum.event.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.event.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.event.request.dto.ParticipationRequestDto;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface EventService {
