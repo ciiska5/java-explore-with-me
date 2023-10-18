@@ -62,7 +62,8 @@ public class RequestServiceImpl implements RequestService {
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new RequestValidationException("Нельзя участвовать в неопубликованном событии");
         }
-        if (event.getParticipantLimit() != 0 && event.getConfirmedRequests() >= event.getParticipantLimit()) {
+        long confirmedRequest = requestRepository.countRequestByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+        if (event.getParticipantLimit() != 0 && confirmedRequest >= event.getParticipantLimit()) {
             throw new RequestValidationException("У события достигнут лимит запросов на участие");
         }
         if (request != null) {
@@ -79,7 +80,6 @@ public class RequestServiceImpl implements RequestService {
         //если для события отключена пре-модерация запросов на участие,
         //то запрос должен автоматически перейти в состояние подтвержденного
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
             newRequest.setStatus(RequestStatus.CONFIRMED);
         }
 

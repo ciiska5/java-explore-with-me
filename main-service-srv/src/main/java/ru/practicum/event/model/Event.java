@@ -31,9 +31,6 @@ public class Event {
     @Column(name = "created_on", nullable = false)
     private LocalDateTime createdOn;//Дата и время создания события (в формате "yyyy-MM-dd HH:mm:ss")
 
-    @Column(name = "confirmed_requests")
-    private Long confirmedRequests;//Количество одобренных заявок на участие в данном событии
-
     @Column(name = "description", nullable = false, length = 7000)
     private String description;//Полное описание события
 

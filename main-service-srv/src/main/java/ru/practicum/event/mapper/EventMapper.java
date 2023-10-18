@@ -13,6 +13,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static ru.practicum.category.mapper.CategoryMapper.toCategoryDto;
 import static ru.practicum.event.location.mapper.LocationMapper.toLocationDto;
@@ -20,7 +24,21 @@ import static ru.practicum.user.mapper.UserMapper.toUserShortDto;
 
 public class EventMapper {
 
-    public static EventFullDto toEventFullDto(Event event, Long views) {
+    public static List<EventFullDto> toEventFullDtoList(
+            List<Event> eventList,
+            Map<Long, Long> viewsMap,
+            Map<Long, Long> confirmedRequestsMap
+    ) {
+        return eventList.stream()
+                .map(event -> toEventFullDto(
+                        event,
+                        viewsMap.getOrDefault(event.getId(), 0L),
+                        confirmedRequestsMap.getOrDefault(event.getId(), 0L)))
+                .sorted(Comparator.comparingLong(EventFullDto::getViews))
+                .collect(Collectors.toList());
+    }
+
+    public static EventFullDto toEventFullDto(Event event, Long views, Long confirmedRequests) {
         EventFullDto eventFullDto = new EventFullDto();
 
         eventFullDto.setId(event.getId());
@@ -38,12 +56,26 @@ public class EventMapper {
         eventFullDto.setState(event.getState());
         eventFullDto.setTitle(event.getTitle());
         eventFullDto.setViews(views);
-        eventFullDto.setConfirmedRequests(event.getConfirmedRequests());
+        eventFullDto.setConfirmedRequests(confirmedRequests);
 
         return eventFullDto;
     }
 
-    public static EventShortDto toEventShortDto(Event event, Long views) {
+    public static List<EventShortDto> toEventShortDtoList(
+            List<Event> eventList,
+            Map<Long, Long> viewsMap,
+            Map<Long, Long> confirmedRequestsMap
+    ) {
+        return eventList.stream()
+                .map(event -> toEventShortDto(
+                        event,
+                        viewsMap.getOrDefault(event.getId(), 0L),
+                        confirmedRequestsMap.getOrDefault(event.getId(), 0L)))
+                .sorted(Comparator.comparingLong(EventShortDto::getViews))
+                .collect(Collectors.toList());
+    }
+
+    public static EventShortDto toEventShortDto(Event event, Long views, Long confirmedRequests) {
         EventShortDto eventShortDto = new EventShortDto();
 
         eventShortDto.setId(event.getId());
@@ -53,7 +85,7 @@ public class EventMapper {
         eventShortDto.setInitiator(toUserShortDto(event.getInitiator()));
         eventShortDto.setPaid(event.getPaid());
         eventShortDto.setTitle(event.getTitle());
-        eventShortDto.setConfirmedRequests(event.getConfirmedRequests());
+        eventShortDto.setConfirmedRequests(confirmedRequests);
         eventShortDto.setViews(views);
 
         return eventShortDto;
@@ -89,7 +121,6 @@ public class EventMapper {
         event.setRequestModeration(requestModeration);
         event.setTitle(newEventDto.getTitle());
         event.setInitiator(user);
-        event.setConfirmedRequests(0L);
         event.setState(EventState.PENDING);
 
 

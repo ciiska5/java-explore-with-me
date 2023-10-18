@@ -25,6 +25,7 @@ import ru.practicum.event.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.event.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.event.request.dto.ParticipationRequestDto;
 import ru.practicum.event.request.mapper.RequestMapper;
+import ru.practicum.event.request.model.ConfirmedRequestsCount;
 import ru.practicum.event.request.model.Request;
 import ru.practicum.event.request.repository.RequestRepository;
 import ru.practicum.exception.EventDateException;
@@ -40,6 +41,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static ru.practicum.event.location.mapper.LocationMapper.toLocation;
@@ -67,11 +69,17 @@ public class EventServiceImpl implements EventService {
 
         PageRequest pageRequest = PageRequest.of(from / size, size);
 
+        List<Event> foundEventList = eventRepository.findAllByInitiatorId(userId, pageRequest);
+        if (foundEventList.isEmpty()) {
+            log.info("Cобытия, добавленные текущим пользователем с id = {}, не найдены", userId);
+            return List.of();
+        }
+
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsStats(foundEventList);
+        Map<Long, Long> viewsMap = getViewStats(foundEventList);
+
         log.info("УСПЕШНО получены события, добавленные текущим пользователем с id = {}", userId);
-        return eventRepository.findAllByInitiatorId(userId, pageRequest)
-                .stream()
-                .map(event -> EventMapper.toEventShortDto(event, getViewStats(event)))
-                .collect(Collectors.toList());
+        return EventMapper.toEventShortDtoList(foundEventList, viewsMap, confirmedRequestsMap);
     }
 
     //Добавление нового события
@@ -91,8 +99,9 @@ public class EventServiceImpl implements EventService {
         Event savedEvent = eventRepository.save(event);
 
         Long views = 0L;
+        Long confirmedRequests  = 0L;
         log.info("Пользователем c id = {} УСПЕШНО добвлено новое событие с id = {}", userId, event.getId());
-        return EventMapper.toEventFullDto(savedEvent, views);
+        return EventMapper.toEventFullDto(savedEvent, views, confirmedRequests);
     }
 
     //Получение полной информации о событии, добавленном текущим пользователем
@@ -103,9 +112,10 @@ public class EventServiceImpl implements EventService {
         checkUserExistence(userId);
         checkEventExistence(eventId);
         Event event = eventRepository.findByInitiatorIdAndId(userId, eventId);
+        Long confirmedRequests = requestRepository.countRequestByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
 
         log.info("УСПЕШНО получено событие c id = {}, добавленное текущим пользователем c id = {}", eventId, userId);
-        return EventMapper.toEventFullDto(event, getViewStats(event));
+        return EventMapper.toEventFullDto(event, getViewStats(event), confirmedRequests);
     }
 
     //Изменение события, добавленного текущим пользователем
@@ -143,10 +153,11 @@ public class EventServiceImpl implements EventService {
         }
 
         updateEventFieldsByUser(event, updateEventUserRequest, updateLocation);
+        Long confirmedRequests = requestRepository.countRequestByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
 
         Event updatedEvent = eventRepository.save(event);
         log.info("УСПЕШНО изменено событие c id = {}, добавленное текущим пользователем c id = {}", eventId, userId);
-        return EventMapper.toEventFullDto(updatedEvent, getViewStats(event));
+        return EventMapper.toEventFullDto(updatedEvent, getViewStats(event), confirmedRequests);
     }
 
     //Получение информации о запросах на участие в событии текущего пользователя
@@ -194,7 +205,7 @@ public class EventServiceImpl implements EventService {
         }
 
         Long participationLimit = event.getParticipantLimit();
-        Long confirmedRequests = event.getConfirmedRequests();
+        Long confirmedRequests = requestRepository.countRequestByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
         if (eventRequestStatusUpdateRequest.getStatus().equals(RequestStatus.CONFIRMED.toString())) {
             long leftRequests = participationLimit - confirmedRequests;
             if (leftRequests <= 0) {
@@ -205,7 +216,6 @@ public class EventServiceImpl implements EventService {
             if (event.getParticipantLimit() == null || leftRequests >= requestIds.size()) {
                 List<Long> confirmedRequestList = eventRequestStatusUpdateRequest.getRequestIds();
                 requestRepository.updateRequests(confirmedRequestList, RequestStatus.CONFIRMED, RequestStatus.PENDING);
-                event.setConfirmedRequests(event.getConfirmedRequests() + confirmedRequestList.size());
                 return getUpdatedRequestResult(confirmedRequestList, new ArrayList<>());
             } else { //обновление статуса запросов на CONFIRMED и REJECTED при исчерпании лимита участников
                 List<Long> confirmed = new ArrayList<>();
@@ -220,7 +230,6 @@ public class EventServiceImpl implements EventService {
                 }
                 if (!confirmed.isEmpty()) {
                     requestRepository.updateRequests(confirmed, RequestStatus.CONFIRMED, RequestStatus.PENDING);
-                    event.setConfirmedRequests(event.getConfirmedRequests() + confirmed.size());
                 }
                 if (!rejected.isEmpty()) {
                     requestRepository.updateRequests(rejected, RequestStatus.REJECTED, RequestStatus.PENDING);
@@ -267,11 +276,17 @@ public class EventServiceImpl implements EventService {
                 adminParameters, rangeStart, rangeEnd, eventStateList, pageRequest
         );
 
+        if (foundEvents.isEmpty()) {
+            log.info("События с параметрами = {} не найдены", adminParameters);
+            return List.of();
+        }
+
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsStats(foundEvents);
+        Map<Long, Long> viewsMap = getViewStats(foundEvents);
+
         log.info("Получены все события с параметрами = {}", adminParameters);
 
-        return foundEvents.stream()
-                .map(event -> EventMapper.toEventFullDto(event, getViewStats(event)))
-                .collect(Collectors.toList());
+        return  EventMapper.toEventFullDtoList(foundEvents, viewsMap, confirmedRequestsMap);
     }
 
     //Редактирование данных события и его статуса (отклонение/публикация) (Admin)
@@ -318,8 +333,10 @@ public class EventServiceImpl implements EventService {
 
         checkOneHoursTimePublicationRestriction(event.getEventDate());
 
+        Long confirmedRequest = requestRepository.countRequestByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+
         log.info("Отредактированы данные события c id = {}", eventId);
-        return EventMapper.toEventFullDto(event, getViewStats(event));
+        return EventMapper.toEventFullDto(event, getViewStats(event), confirmedRequest);
     }
 
     /**
@@ -362,20 +379,22 @@ public class EventServiceImpl implements EventService {
             );
             saveHit(uri, remoteAddr);
 
+            Map<Long, Long> viewStats = getViewStats(availableEventList);
+            Map<Long, Long> confirmedRequests = getConfirmedRequestsStats(availableEventList);
+
             log.info("Получены события с параметрами {}, у которых не исчерпан лимит запросов на участие", publicParameters);
-            return availableEventList.stream()
-                    .map(event -> EventMapper.toEventShortDto(event, getViewStats(event)))
-                    .collect(Collectors.toList());
+            return EventMapper.toEventShortDtoList(availableEventList, viewStats, confirmedRequests);
         } else {
             List<Event> allPublishedEvents = eventRepository.getAllPublishedEvents(
                     publicParameters, rangeStart, rangeEnd, pageRequest
             );
             saveHit(uri, remoteAddr);
 
+            Map<Long, Long> viewStats = getViewStats(allPublishedEvents);
+            Map<Long, Long> confirmedRequests = getConfirmedRequestsStats(allPublishedEvents);
+
             log.info("Получены все опубликованные события с параметрами {}", publicParameters);
-            return allPublishedEvents.stream()
-                    .map(event -> EventMapper.toEventShortDto(event, getViewStats(event)))
-                    .collect(Collectors.toList());
+            return EventMapper.toEventShortDtoList(allPublishedEvents, viewStats, confirmedRequests);
         }
     }
 
@@ -391,7 +410,9 @@ public class EventServiceImpl implements EventService {
         }
 
         saveHit(uri, remoteAddr);
-        return EventMapper.toEventFullDto(event, getViewStats(event));
+        Long confirmedRequest = requestRepository.countRequestByEventIdAndStatus(id, RequestStatus.CONFIRMED);
+
+        return EventMapper.toEventFullDto(event, getViewStats(event), confirmedRequest);
     }
 
     /**
@@ -578,10 +599,10 @@ public class EventServiceImpl implements EventService {
         statsClient.saveHit(endpointHitDto);
     }
 
-    //получение статистики
+    //получение статистики по просмотрам для одного события
     private Long getViewStats(Event event) {
         String uri = "/events/" + event.getId();
-        String[] uris = new String[] {uri};
+        List<String> uris = List.of(uri);
 
         List<ViewStats> viewStats = statsClient.getViewStats(
                 timeToString(event.getCreatedOn()),
@@ -594,6 +615,47 @@ public class EventServiceImpl implements EventService {
             return viewStats.get(0).getHits();
         }
         return 0L;
+    }
+
+    //получение статистики <eventId, viewCount> по просмотрам для списка событий
+    private Map<Long, Long> getViewStats(List<Event> events) {
+        List<String> uris = events.stream()
+                .map(e -> "/events/" + e.getId())
+                .collect(Collectors.toList());
+
+        List<ViewStats> viewStats = statsClient.getViewStats(
+                timeToString(LocalDateTime.now().minusHours(1)),
+                timeToString(LocalDateTime.now().plusSeconds(1)),
+                uris,
+                true
+        );
+
+        if (viewStats.size() > 0) {
+            return viewStats.stream()
+                    .collect(Collectors.toMap(viewStat -> {
+                            String uri = viewStat.getUri();
+                            return Long.parseLong(uri.substring(uri.lastIndexOf("/") + 1));
+                        },
+                        ViewStats::getHits
+                    ));
+        }
+        return Map.of();
+    }
+
+    //получение данных <eventId, confirmedRequests> по подтвержденным запросам для списка событий
+    private Map<Long, Long> getConfirmedRequestsStats(List<Event> events) {
+        List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+
+        List<ConfirmedRequestsCount> confirmedRequestsList = requestRepository.getConfirmedRequestsCountList(
+                eventIds, RequestStatus.CONFIRMED);
+
+        return confirmedRequestsList.stream()
+                .collect(Collectors.toMap(
+                        ConfirmedRequestsCount::getEventId,
+                        ConfirmedRequestsCount::getConfirmedNumber)
+                );
     }
 
     //конвертация времени из LocalDateTime в строку

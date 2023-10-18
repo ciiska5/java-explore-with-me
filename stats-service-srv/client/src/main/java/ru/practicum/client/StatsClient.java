@@ -35,7 +35,7 @@ public class StatsClient {
         );
     }
 
-    public List<ViewStats> getViewStats(String start, String end, String[] uris, boolean unique) {
+    public List<ViewStats> getViewStats(String start, String end, List<String> uris, boolean unique) {
 
         Map<String, Object> parameters = Map.of(
                 "start", start,
