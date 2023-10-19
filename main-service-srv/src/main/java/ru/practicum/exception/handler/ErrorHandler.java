@@ -10,7 +10,8 @@ import ru.practicum.exception.model.ErrorResponse;
 @RestControllerAdvice
 public class ErrorHandler {
     @ExceptionHandler({EmailAlreadyExistsException.class, CategoryExistsException.class,
-            CategoryInUseException.class, RequestValidationException.class, EventValidationException.class})
+            CategoryInUseException.class, RequestValidationException.class, EventValidationException.class,
+            CommentValidationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleValidationException(final RuntimeException e) {
         return new ErrorResponse(e.getMessage());
