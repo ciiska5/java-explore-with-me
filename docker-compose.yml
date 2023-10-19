@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   stats-server:
-    build: stats-service-srv
+    build: stats-service-srv/server
     image: stats-service-image
     container_name: explore-with-me-stats
     depends_on:
@@ -23,7 +23,6 @@ services:
 
   ewm-service:
     build: main-service-srv
-    image: main-service-image
     container_name: explore-with-me-main
     ports:
       - "8080:8080"
@@ -32,6 +31,7 @@ services:
       - ewm-db
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-db
+      - STATS_SERVER_URL=http://stats-server:9090
 
   ewm-db:
     image: postgres:14-alpine
