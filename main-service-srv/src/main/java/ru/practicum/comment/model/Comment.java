@@ -1,6 +1,9 @@
 package ru.practicum.comment.model;
 
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import ru.practicum.event.model.Event;
 import ru.practicum.user.model.User;
 
@@ -19,6 +22,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "comments")
+@EntityListeners(AuditingEntityListener.class)
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +32,12 @@ public class Comment {
     private String text; //Содержимое комментария пользователя
 
     @Column(name = "created", nullable = false)
-    private LocalDateTime created;//Дата и время создания комментария (в формате "yyyy-MM-dd HH:mm:ss")
+    @CreatedDate
+    private LocalDateTime created;//Дата и время создания комментария
+
+    @Column(name = "updated_time")
+    @LastModifiedDate
+    private LocalDateTime updatedTime;//Дата и время обновления комментария
 
     @ManyToOne
     @JoinColumn(name = "commentator_id", nullable = false)

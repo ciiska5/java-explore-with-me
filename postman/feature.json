@@ -354,6 +354,7 @@
 							"    pm.expect(target.event).to.not.be.null;\r",
 							"    pm.expect(target.commentator).to.not.be.null;\r",
 							"    pm.expect(target.created).to.not.be.null;\r",
+							"    pm.expect(target.updatedTime).to.not.be.null;\r",
 							"});"
 						],
 						"type": "text/javascript"
@@ -532,6 +533,7 @@
 							"    pm.expect(target.event).to.not.be.null;\r",
 							"    pm.expect(target.creator).to.not.be.null;\r",
 							"    pm.expect(target.created).to.not.be.null;\r",
+							"    pm.expect(target.updatedTime).to.not.be.null;\r",
 							"});"
 						],
 						"type": "text/javascript"
@@ -591,7 +593,7 @@
 							"const source = JSON.parse(pm.request.body.raw);\r",
 							"const target = pm.response.json();\r",
 							"\r",
-							"pm.test(\"Комментарий должен содержать поля: id, text, created, commentator, event\", function () {\r",
+							"pm.test(\"Комментарий должен содержать поля: id, text, created, updatedTime, commentator, event\", function () {\r",
 							"pm.expect(target).to.have.property('id');\r",
 							"pm.expect(target).to.have.property('text');\r",
 							"});\r",
@@ -600,6 +602,7 @@
 							"    pm.expect(target.id).to.not.be.null;\r",
 							"    pm.expect(source.text).equal(target.text, 'Текст должен совпадать с отправленным');\r",
 							"    pm.expect(target.created).to.not.be.null;\r",
+							"    pm.expect(target.updatedTime).to.not.be.null;\r",
 							"    pm.expect(target.commentator).to.not.be.null;\r",
 							"    pm.expect(target.event).to.not.be.null;\r",
 							"});"

@@ -6,9 +6,6 @@ import lombok.NoArgsConstructor;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.user.dto.UserShortDto;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-
 /**
  * Шаблон объекта CommentDto для пользователя.
  */
@@ -19,11 +16,11 @@ import javax.validation.constraints.NotEmpty;
 public class CommentDto {
     private Long id; //Идентификатор
 
-    @NotEmpty
-    @NotBlank
     private String text;//Содержимое комментария пользователя
 
     private String created;//Дата и время создания комментария (в формате "yyyy-MM-dd HH:mm:ss")
+
+    private String updatedTime;//Дата и время обновления комментария (в формате "yyyy-MM-dd HH:mm:ss")
 
     private UserShortDto commentator;//Пользователь, оставивший комментарий
 

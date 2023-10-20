@@ -76,13 +76,11 @@ public class CommentServiceImpl implements CommentService {
             throw new EventValidationException("Событие с id = " + eventId + " не опубликован");
         }
 
-        Comment newComment = commentRepository.save(CommentMapper.toComment(event, commentator, newCommentDto, timeToString(LocalDateTime.now())));
-
+        Comment newComment = commentRepository.save(CommentMapper.toComment(event, commentator, newCommentDto));
         log.info("УСПЕШНО добавлен новый комментарий к событию с id = {} пользователем с id = {}", eventId, commentatorId);
 
         Long views = getViewStats(event);
         Long confirmedRequest = requestRepository.countRequestByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-
         return CommentMapper.toCommentDto(newComment, views, confirmedRequest);
     }
 
