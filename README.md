@@ -23,8 +23,8 @@
 ## Спецификация API
 
 Для обоих сервисов имеются подробные спецификации API:
-- спецификация основного сервиса: [ewm-main-service-spec.json](https://raw.githubusercontent.com/yandex-praktikum/java-explore-with-me/main/ewm-main-service-spec.json)
-спецификация сервиса статистики: [ewm-stats-service.json](https://raw.githubusercontent.com/yandex-praktikum/java-explore-with-me/main/ewm-stats-service-spec.json).
+- спецификация основного сервиса: [ewm-main-service-spec.json](https://raw.githubusercontent.com/yandex-praktikum/java-explore-with-me/main/ewm-main-service-spec.json)  
+- спецификация сервиса статистики: [ewm-stats-service.json](https://raw.githubusercontent.com/yandex-praktikum/java-explore-with-me/main/ewm-stats-service-spec.json).
 
 Для работы с ними вам понадобится редактор [Swagger](https://editor-next.swagger.io/)
 
@@ -53,7 +53,7 @@
 
 ![exploreWithMeDBDiagram](exploreWithMeDBDiagram.jpg)
 
-База данных **основного сервиса** состоит из 8 таблиц, а база данных **сервиса статистики** - из 1 таблицы:
+База данных **основного сервиса** состоит из 8 таблиц, а база данных **сервиса статистики** - из 1 таблицы:  
 **MAIN SERVICE**
 | Название таблицы | Описание |
 | --- | --- |
@@ -66,7 +66,7 @@
 | **compilation_event** | таблица с событиями и соответствующими им подборками (many-to-many) |
 | **comments** | таблица с комментариями к событиям |
 
-**ЫЕФЕЫ SERVICE**
+**STATS SERVICE**
 | Название таблицы | Описание |
 | --- | --- |
 | **hits** | таблица со статистикой обращений к основному API |
